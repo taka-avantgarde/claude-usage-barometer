@@ -1,14 +1,15 @@
 #!/bin/bash
 #
 # Claude Usage Barometer — SwiftBar / xbar plugin
-# Always-legible text + 🟢 / 🟡 / 🔴 status marks for Claude's 5-hour and
-# 7-day usage windows. Rate-limit friendly (caches last reading + throttles).
+# A compact, battery-style menu-bar gauge for Claude's 5-hour and 7-day
+# usage limits. The bar shows what's LEFT (█) vs used up (░) and is tinted
+# green -> amber -> red as you approach the limit. Rate-limit friendly.
 #
 # <xbar.title>Claude Usage Barometer</xbar.title>
-# <xbar.version>v1.1.0</xbar.version>
+# <xbar.version>v1.2.0</xbar.version>
 # <xbar.author>Takayuki Miyano</xbar.author>
 # <xbar.author.github>taka-avantgarde</xbar.author.github>
-# <xbar.desc>Menu-bar gauge for Claude's 5-hour and 7-day usage limits, with status marks.</xbar.desc>
+# <xbar.desc>Compact battery-style menu-bar gauge for Claude's 5-hour & 7-day usage limits.</xbar.desc>
 # <xbar.dependencies>bash,jq,curl</xbar.dependencies>
 # <xbar.abouturl>https://github.com/taka-avantgarde/claude-usage-barometer</xbar.abouturl>
 # <swiftbar.hideAbout>false</swiftbar.hideAbout>
@@ -20,10 +21,10 @@
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
 # ─── Configuration ─────────────────────────────────────────────
-WARN=70                 # % used -> warn mark
-DANGER=90               # % used -> danger mark
-SYM_OK="🟢"; SYM_WARN="🟡"; SYM_DANGER="🔴"   # status mark shown after the %
-OK_COLOR="#5E9C6B"; WARN_COLOR="#BF9B30"; DANGER_COLOR="#B5524A"  # dropdown row tint
+WARN=70                 # % used -> amber
+DANGER=90               # % used -> red
+OK_COLOR="#5E9C6B"; WARN_COLOR="#BF9B30"; DANGER_COLOR="#B5524A"
+FILL="█"; EMPTY="░"     # FILL = remaining, EMPTY = used up
 MBAR_W=5                # bar width in the menu bar
 DROP_W=10               # bar width in the dropdown
 SCALE="auto"            # auto | yes | no  (multiply utilization by 100?)
@@ -33,25 +34,22 @@ MIN_INTERVAL=180        # min seconds between real API calls (rate-limit guard)
 ENDPOINT="https://api.anthropic.com/api/oauth/usage"
 BETA="oauth-2025-04-20"
 CACHE="$HOME/.cache/claude-usage-barometer.tsv"
-FILL="█"; EMPTY="░"; FONT="font=Menlo size=12"
+FONT="font=Menlo size=12"
 
 col() { local p=$1; if (( p>=DANGER )); then echo "$DANGER_COLOR"
   elif (( p>=WARN )); then echo "$WARN_COLOR"; else echo "$OK_COLOR"; fi; }
-sym() { local p=$1; if (( p>=DANGER )); then printf '%s' "$SYM_DANGER"
-  elif (( p>=WARN )); then printf '%s' "$SYM_WARN"; else printf '%s' "$SYM_OK"; fi; }
 emit_err() { local mb="$1"; shift
-  echo "${mb} | ${FONT}"; echo "---"
+  echo "${mb} | ${FONT} color=${WARN_COLOR}"; echo "---"
   local l; for l in "$@"; do echo "$l"; done
   echo "Refresh now | refresh=true"; exit 0; }
 
-# ── Cache layout:  attemptTime \t successTime \t U5 \t U7 \t R5 \t R7 ──
+# ── Cache:  attemptTime \t successTime \t U5 \t U7 \t R5 \t R7 ──
 aTIME=0; sTIME=0; cU5=""; cU7=""; cR5=""; cR7=""
 [ -f "$CACHE" ] && IFS=$'\t' read -r aTIME sTIME cU5 cU7 cR5 cR7 < "$CACHE"
 now=$(date +%s)
 write_cache() { mkdir -p "$(dirname "$CACHE")"; printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" "$5" "$6" > "$CACHE"; }
 U5="$cU5"; U7="$cU7"; R5="$cR5"; R7="$cR7"; SRC="cache"
 
-# Only hit the API at most once per MIN_INTERVAL — serve cache otherwise.
 if [ $(( now - aTIME )) -ge "$MIN_INTERVAL" ]; then
   TOKEN=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null \
           | jq -r '.claudeAiOauth.accessToken // .accessToken // empty' 2>/dev/null)
@@ -73,9 +71,9 @@ if [ $(( now - aTIME )) -ge "$MIN_INTERVAL" ]; then
       R7=$(printf '%s' "$BODY" | jq -r '.seven_day.resets_at // empty' 2>/dev/null)
       SRC="live"; write_cache "$now" "$now" "$U5" "$U7" "$R5" "$R7"
     else
-      write_cache "$now" "$sTIME" "$cU5" "$cU7" "$cR5" "$cR7"   # back off even on failure
+      write_cache "$now" "$sTIME" "$cU5" "$cU7" "$cR5" "$cR7"
       if [ -n "$cU5$cU7" ]; then SRC="limited"
-      elif [ "$CODE" = "429" ]; then emit_err "Claude …" "Rate limited — retrying soon" "Auto-retries every few minutes; no action needed."
+      elif [ "$CODE" = "429" ]; then emit_err "Claude …" "Rate limited — retrying soon" "Auto-retries every few minutes."
       else emit_err "Claude !" "HTTP $CODE" "$(printf '%s' "$BODY" | head -c 200 | tr '\n' ' ')"; fi
     fi
   fi
@@ -103,13 +101,15 @@ remain() { local iso="$1" ts e n d; [ -z "$iso" ] && { echo ""; return; }
 
 [ -z "$U5$U7" ] && emit_err "Claude …" "Warming up" "Fetching first reading… (auto-retries)"
 P5=$(to_pct "$U5"); P7=$(to_pct "$U7")
+REM5=$(( P5<0 ? -1 : 100-P5 )); REM7=$(( P7<0 ? -1 : 100-P7 ))
+WORST=$(( P5>P7 ? P5 : P7 )); (( WORST<0 )) && WORST=0
 
-# Menu bar: neutral text (auto black/white) + colored status marks.
-echo "5h $(bar $P5 $MBAR_W) $(fmt $P5) $(sym $P5)  7d $(bar $P7 $MBAR_W) $(fmt $P7) $(sym $P7) | ${FONT}"
+# Menu bar: colored battery bars (█ = left, ░ = used). One color = worst window.
+echo "5h $(bar $REM5 $MBAR_W)  7d $(bar $REM7 $MBAR_W) | ${FONT} color=$(col $WORST)"
 echo "---"
-echo "5-hour   $(bar $P5 $DROP_W)  $(fmt $P5) $(sym $P5) | ${FONT} color=$(col $P5)"
+echo "5-hour   $(bar $REM5 $DROP_W)  $(fmt $REM5) left | ${FONT} color=$(col $P5)"
 [ -n "$R5" ] && echo "         resets in $(remain "$R5") | size=11 color=#888888"
-echo "7-day    $(bar $P7 $DROP_W)  $(fmt $P7) $(sym $P7) | ${FONT} color=$(col $P7)"
+echo "7-day    $(bar $REM7 $DROP_W)  $(fmt $REM7) left | ${FONT} color=$(col $P7)"
 [ -n "$R7" ] && echo "         resets in $(remain "$R7") | size=11 color=#888888"
 echo "---"
 case "$SRC" in

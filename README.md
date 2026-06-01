@@ -2,8 +2,8 @@
 
 # 🎚️ Claude Usage Barometer
 
-**A menu-bar gauge for your Claude usage limits.**
-See your **5-hour** and **7-day** windows at a glance — with 🟢 / 🟡 / 🔴 status marks, right from the macOS menu bar.
+**A compact, battery-style menu-bar gauge for your Claude usage limits.**
+Watch your **5-hour** and **7-day** windows drain in real time — right from the macOS menu bar.
 
 [**English**](README.md) · [日本語](README.ja.md)
 
@@ -30,13 +30,13 @@ See your **5-hour** and **7-day** windows at a glance — with 🟢 / 🟡 / �
 ## 👀 Preview
 
 ```text
- menu bar:   …   5h ███░░ 63% 🟢   7d █░░░░ 13% 🟢   ⏰ Mon 14:32
+ menu bar:   …   5h ██░░░  7d ████░       (green → amber → red)
 
  click ▼
  ┌────────────────────────────────────┐
- │ 5-hour   ██████░░░░   63% 🟢        │
+ │ 5-hour   ████░░░░░░   37% left      │
  │          resets in 2h 10m          │
- │ 7-day    █░░░░░░░░░   13% 🟢        │
+ │ 7-day    █████████░   87% left      │
  │          resets in 2d 8h           │
  │ ────────────────────────────────── │
  │ Updated 14:32:05                   │
@@ -44,28 +44,29 @@ See your **5-hour** and **7-day** windows at a glance — with 🟢 / 🟡 / �
  └────────────────────────────────────┘
 ```
 
+`█` = remaining, `░` = used up. The bar drains and reddens as you approach the limit.
+
 > 📸 Drop a real screenshot at `docs/screenshot.png` and reference it here.
 
 ## ✨ Features
 
-- **Status at a glance** — a 🟢 / 🟡 / 🔴 mark after each percentage (green → amber → red as you approach the limit).
-- **Always legible** — the bars and numbers use the system label color (black on light menu bars, white on dark), so they never wash out against the menu bar.
-- **Both windows** — 5-hour and 7-day, side by side, each with its own mark.
-- **Reset countdown** — the dropdown shows when each window refreshes (`resets in 2h 10m`).
-- **Rate-limit friendly** — caches the last good reading and throttles API calls (≥ 3 min apart), so a brief `429` shows the last value instead of an error.
+- **Battery-style gauge** — `█` shows what's left, `░` what's used; it drains as you consume your quota.
+- **Color-coded** — the bar is tinted **green → amber → red** as you near the limit (no separate icon needed).
+- **Compact** — just the two bars in the menu bar; the dropdown shows `% left` and the reset countdown.
+- **Rate-limit friendly** — caches the last good reading and throttles API calls (≥ 3 min apart), surviving brief `429`s.
 - **Zero build, pure Bash.** Easy to read, audit, and tweak. Private by design.
 
-## 🚦 Status marks
+## 🎨 How the color works
 
-The mark reflects how much of a window you've **used**:
+The bar's color reflects how close the **more-constrained** window is to its limit:
 
-| Usage | Mark | Meaning |
-|------:|:----:|:--------|
-| `0–69%`  | 🟢 | Plenty left |
-| `70–89%` | 🟡 | Getting close |
-| `90–100%`| 🔴 | Almost out |
+| Used | Color | Meaning |
+|-----:|:-----:|:--------|
+| `0–69%`  | 🟢 green | Plenty left |
+| `70–89%` | 🟡 amber | Getting close |
+| `90–100%`| 🔴 red   | Almost out |
 
-Prefer different glyphs? Set `SYM_OK` / `SYM_WARN` / `SYM_DANGER` in the config (e.g. `🟢 ⚠️ ❗` or monochrome `● ▲ !`). Dropdown rows are additionally tinted via `OK_COLOR` / `WARN_COLOR` / `DANGER_COLOR`.
+> SwiftBar paints each menu-bar item a single color, so the menu-bar bar uses the worse of the two windows. The dropdown tints each window individually.
 
 ## 📦 Requirements
 
@@ -89,7 +90,7 @@ chmod +x ~/SwiftBar/claude-usage.60s.sh
 
 Then launch SwiftBar and point its **plugin folder** to `~/SwiftBar`. The first time the plugin runs, macOS asks to access *"Claude Code-credentials"* in your Keychain — click **Always Allow**.
 
-> The `.60s.` in the filename means the menu bar **redraws** every 60 seconds; the API itself is only called every `MIN_INTERVAL` seconds (default 180). Rename to `.5m.`, `.1h.`, etc. to change the redraw cadence.
+> The `.60s.` in the filename means the menu bar **redraws** every 60 seconds; the API itself is only called every `MIN_INTERVAL` seconds (default 180).
 
 ## ⚙️ Configuration
 
@@ -97,29 +98,26 @@ Edit the block at the top of `claude-usage.60s.sh`:
 
 | Variable | Default | What it does |
 |---|---|---|
-| `WARN` / `DANGER` | `70` / `90` | % used that flips the mark to 🟡 / 🔴 |
-| `SYM_OK` / `SYM_WARN` / `SYM_DANGER` | 🟢 / 🟡 / 🔴 | the status marks after the % |
-| `OK_COLOR` / `WARN_COLOR` / `DANGER_COLOR` | sage / ochre / brick | dropdown row tint |
-| `MIN_INTERVAL` | `180` | min seconds between real API calls (rate-limit guard) |
+| `WARN` / `DANGER` | `70` / `90` | % used that turns the bar amber / red |
+| `OK_COLOR` / `WARN_COLOR` / `DANGER_COLOR` | sage / ochre / brick | the three colors |
+| `FILL` / `EMPTY` | `█` / `░` | remaining / used-up bar characters |
 | `MBAR_W` / `DROP_W` | `5` / `10` | bar width (menu bar / dropdown) |
+| `MIN_INTERVAL` | `180` | min seconds between real API calls (rate-limit guard) |
 | `SCALE` | `auto` | how to read `utilization` (`auto`, `yes`, `no`) |
 
 ## 🩺 Troubleshooting
-
-The menu-bar title tells you what happened:
 
 | Title | Meaning | Fix |
 |---|---|---|
 | `Claude …` | Rate limited / warming up | Nothing — it auto-retries every few minutes |
 | `Claude ⚠` | No credentials found | Sign in with Claude Code |
 | `Claude !` | API returned non-200 | Open the dropdown for the status code / body |
-| `Claude ?` | Unexpected JSON shape | The endpoint changed — open the dropdown to inspect |
 
 ## 🔒 Privacy & disclaimer
 
 This plugin talks **only** to `api.anthropic.com`, using the token already on your machine. Nothing is sent anywhere else. The last reading is cached locally at `~/.cache/claude-usage-barometer.tsv`.
 
-It relies on an **unofficial** usage endpoint (`/api/oauth/usage`) that Anthropic may change or remove at any time. If it ever breaks, the title shows `Claude !` or `Claude ?`. PRs welcome.
+It relies on an **unofficial** usage endpoint (`/api/oauth/usage`) that Anthropic may change or remove at any time. If it ever breaks, the title shows `Claude !`. PRs welcome.
 
 ## 🧰 Tech stack
 
