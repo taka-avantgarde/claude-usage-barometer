@@ -6,7 +6,7 @@
 # green -> amber -> red as you approach the limit. Rate-limit friendly.
 #
 # <xbar.title>Claude Usage Barometer</xbar.title>
-# <xbar.version>v1.2.0</xbar.version>
+# <xbar.version>v1.2.1</xbar.version>
 # <xbar.author>Takayuki Miyano</xbar.author>
 # <xbar.author.github>taka-avantgarde</xbar.author.github>
 # <xbar.desc>Compact battery-style menu-bar gauge for Claude's 5-hour & 7-day usage limits.</xbar.desc>
@@ -27,7 +27,7 @@ OK_COLOR="#5E9C6B"; WARN_COLOR="#BF9B30"; DANGER_COLOR="#B5524A"
 FILL="█"; EMPTY="░"     # FILL = remaining, EMPTY = used up
 MBAR_W=5                # bar width in the menu bar
 DROP_W=10               # bar width in the dropdown
-SCALE="auto"            # auto | yes | no  (multiply utilization by 100?)
+SCALE="no"              # endpoint returns 0-100 percentages -> use as-is (set auto/yes for 0-1 fractions)
 MIN_INTERVAL=180        # min seconds between real API calls (rate-limit guard)
 # ───────────────────────────────────────────────────────────────
 

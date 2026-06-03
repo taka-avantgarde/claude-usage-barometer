@@ -103,7 +103,7 @@ Edit the block at the top of `claude-usage.60s.sh`:
 | `FILL` / `EMPTY` | `█` / `░` | remaining / used-up bar characters |
 | `MBAR_W` / `DROP_W` | `5` / `10` | bar width (menu bar / dropdown) |
 | `MIN_INTERVAL` | `180` | min seconds between real API calls (rate-limit guard) |
-| `SCALE` | `auto` | how to read `utilization` (`auto`, `yes`, `no`) |
+| `SCALE` | `no` | how to read `utilization` — the endpoint returns 0–100 percentages (`no` = as-is) |
 
 ## 🩺 Troubleshooting
 

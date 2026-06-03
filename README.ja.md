@@ -103,7 +103,7 @@ chmod +x ~/SwiftBar/claude-usage.60s.sh
 | `FILL` / `EMPTY` | `█` / `░` | 残量 / 使った分のバー文字 |
 | `MBAR_W` / `DROP_W` | `5` / `10` | バーの幅（メニューバー / ドロップダウン） |
 | `MIN_INTERVAL` | `180` | API呼び出しの最短間隔(秒)。レート制限対策 |
-| `SCALE` | `auto` | `utilization` の解釈方法（`auto`, `yes`, `no`） |
+| `SCALE` | `no` | `utilization` の解釈 — エンドポイントは0–100%を返すため `no`（そのまま使用） |
 
 ## 🩺 トラブルシューティング
 
