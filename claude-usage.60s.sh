@@ -3,10 +3,11 @@
 # Claude Usage Barometer — SwiftBar / xbar plugin
 # A compact, battery-style menu-bar gauge for Claude's 5-hour and 7-day
 # usage limits. The bar shows what's LEFT (█) vs used up (░) and is tinted
-# green -> amber -> red as you approach the limit. Rate-limit friendly.
+# green -> amber -> red as you approach the limit. Rate-limit friendly,
+# and checks once a day for a newer release.
 #
 # <xbar.title>Claude Usage Barometer</xbar.title>
-# <xbar.version>v1.2.1</xbar.version>
+# <xbar.version>v1.3.0</xbar.version>
 # <xbar.author>Takayuki Miyano</xbar.author>
 # <xbar.author.github>taka-avantgarde</xbar.author.github>
 # <xbar.desc>Compact battery-style menu-bar gauge for Claude's 5-hour & 7-day usage limits.</xbar.desc>
@@ -21,6 +22,8 @@
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
 # ─── Configuration ─────────────────────────────────────────────
+VERSION="v1.3.0"
+REPO="taka-avantgarde/claude-usage-barometer"
 WARN=70                 # % used -> amber
 DANGER=90               # % used -> red
 OK_COLOR="#5E9C6B"; WARN_COLOR="#BF9B30"; DANGER_COLOR="#B5524A"
@@ -29,15 +32,22 @@ MBAR_W=5                # bar width in the menu bar
 DROP_W=10               # bar width in the dropdown
 SCALE="no"              # endpoint returns 0-100 percentages -> use as-is (set auto/yes for 0-1 fractions)
 MIN_INTERVAL=180        # min seconds between real API calls (rate-limit guard)
+UPDATE_CHECK=1          # 1 = check GitHub once a day for a newer release
+UPDATE_INTERVAL=86400   # seconds between update checks
 # ───────────────────────────────────────────────────────────────
 
 ENDPOINT="https://api.anthropic.com/api/oauth/usage"
 BETA="oauth-2025-04-20"
 CACHE="$HOME/.cache/claude-usage-barometer.tsv"
+UPD_CACHE="$HOME/.cache/claude-usage-barometer.update"
 FONT="font=Menlo size=12"
 
 col() { local p=$1; if (( p>=DANGER )); then echo "$DANGER_COLOR"
   elif (( p>=WARN )); then echo "$WARN_COLOR"; else echo "$OK_COLOR"; fi; }
+ver_gt() { awk -v a="${1#v}" -v b="${2#v}" 'BEGIN{
+  n=split(a,A,"."); m=split(b,B,"."); k=(n>m?n:m)
+  for(i=1;i<=k;i++){x=A[i]+0; y=B[i]+0; if(y>x)exit 0; if(y<x)exit 1}
+  exit 1}'; }
 emit_err() { local mb="$1"; shift
   echo "${mb} | ${FONT} color=${WARN_COLOR}"; echo "---"
   local l; for l in "$@"; do echo "$l"; done
@@ -79,6 +89,18 @@ if [ $(( now - aTIME )) -ge "$MIN_INTERVAL" ]; then
   fi
 fi
 
+# ── Update check (throttled, best-effort, never blocks) ──
+LATEST=""
+if [ "$UPDATE_CHECK" = "1" ]; then
+  uTIME=0
+  [ -f "$UPD_CACHE" ] && IFS=$'\t' read -r uTIME LATEST < "$UPD_CACHE"
+  if [ $(( now - uTIME )) -ge "$UPDATE_INTERVAL" ]; then
+    L=$(curl -s -m 5 "https://api.github.com/repos/$REPO/releases/latest" | jq -r '.tag_name // empty' 2>/dev/null)
+    [ -n "$L" ] && LATEST="$L"
+    mkdir -p "$(dirname "$UPD_CACHE")"; printf '%s\t%s\n' "$now" "$LATEST" > "$UPD_CACHE"
+  fi
+fi
+
 to_pct() { local v="$1"; [ -z "$v" ] && { echo "-1"; return; }
   case "$SCALE" in
     yes) awk -v x="$v" 'BEGIN{printf "%.0f", x*100}' ;;
@@ -112,8 +134,9 @@ echo "5-hour   $(bar $REM5 $DROP_W)  $(fmt $REM5) left | ${FONT} color=$(col $P5
 echo "7-day    $(bar $REM7 $DROP_W)  $(fmt $REM7) left | ${FONT} color=$(col $P7)"
 [ -n "$R7" ] && echo "         resets in $(remain "$R7") | size=11 color=#888888"
 echo "---"
+[ -n "$LATEST" ] && ver_gt "$VERSION" "$LATEST" && echo "⬆️ Update available: $LATEST | href=https://github.com/$REPO/releases color=#BF9B30"
 case "$SRC" in
-  live)    echo "Updated $(date '+%H:%M:%S') | size=11 color=#888888" ;;
+  live)    echo "Updated $(date '+%H:%M:%S') · $VERSION | size=11 color=#888888" ;;
   limited) echo "Rate-limited · last good $(date -r "${sTIME:-0}" '+%H:%M' 2>/dev/null) | size=11 color=#888888" ;;
   *)       echo "Updated $(date -r "${sTIME:-0}" '+%H:%M:%S' 2>/dev/null) · cached | size=11 color=#888888" ;;
 esac
