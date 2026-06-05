@@ -7,7 +7,7 @@
 # and checks once a day for a newer release.
 #
 # <xbar.title>Claude Usage Barometer</xbar.title>
-# <xbar.version>v1.4.0</xbar.version>
+# <xbar.version>v1.3.0</xbar.version>
 # <xbar.author>Takayuki Miyano</xbar.author>
 # <xbar.author.github>taka-avantgarde</xbar.author.github>
 # <xbar.desc>Compact battery-style menu-bar gauge for Claude's 5-hour & 7-day usage limits.</xbar.desc>
@@ -22,7 +22,7 @@
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
 # ─── Configuration ─────────────────────────────────────────────
-VERSION="v1.4.0"
+VERSION="v1.3.0"
 REPO="taka-avantgarde/claude-usage-barometer"
 WARN=70                 # % used -> amber
 DANGER=90               # % used -> red
@@ -126,20 +126,19 @@ P5=$(to_pct "$U5"); P7=$(to_pct "$U7")
 REM5=$(( P5<0 ? -1 : 100-P5 )); REM7=$(( P7<0 ? -1 : 100-P7 ))
 WORST=$(( P5>P7 ? P5 : P7 )); (( WORST<0 )) && WORST=0
 
-# Menu bar: 残量バー + 残量%(2行)。色は消費(WORST)基準で緑→琥珀→赤。
-UPD=""; [ -n "$LATEST" ] && ver_gt "$VERSION" "$LATEST" && UPD=" ⬆️"
-printf '5h %s %s\\n7d %s %s%s | %s color=%s\n' "$(bar $REM5 $MBAR_W)" "$(fmt $REM5)" "$(bar $REM7 $MBAR_W)" "$(fmt $REM7)" "$UPD" "$FONT" "$(col $WORST)"
+# Menu bar: colored battery bars (█ = left, ░ = used). One color = worst window.
+echo "5h $(bar $REM5 $MBAR_W)  7d $(bar $REM7 $MBAR_W) | ${FONT} color=$(col $WORST)"
 echo "---"
-echo "5時間   $(bar $REM5 $DROP_W) $(fmt $REM5) | ${FONT} color=$(col $P5)"
-[ -n "$R5" ] && echo "残り $(remain "$R5") に回復 | size=11 color=#888888"
-echo "1週間   $(bar $REM7 $DROP_W) $(fmt $REM7) | ${FONT} color=$(col $P7)"
-[ -n "$R7" ] && echo "残り $(remain "$R7") に回復 | size=11 color=#888888"
+echo "5-hour   $(bar $REM5 $DROP_W)  $(fmt $REM5) left | ${FONT} color=$(col $P5)"
+[ -n "$R5" ] && echo "         resets in $(remain "$R5") | size=11 color=#888888"
+echo "7-day    $(bar $REM7 $DROP_W)  $(fmt $REM7) left | ${FONT} color=$(col $P7)"
+[ -n "$R7" ] && echo "         resets in $(remain "$R7") | size=11 color=#888888"
 echo "---"
-[ -n "$LATEST" ] && ver_gt "$VERSION" "$LATEST" && echo "⬆️ 更新あり: $LATEST | href=https://github.com/$REPO/releases color=#BF9B30"
+[ -n "$LATEST" ] && ver_gt "$VERSION" "$LATEST" && echo "⬆️ Update available: $LATEST | href=https://github.com/$REPO/releases color=#BF9B30"
 case "$SRC" in
-  live)    echo "更新 $(date '+%H:%M:%S') | size=11 color=#888888" ;;
-  limited) echo "レート制限中 · 直近 $(date -r "${sTIME:-0}" '+%H:%M' 2>/dev/null) | size=11 color=#888888" ;;
-  *)       echo "更新 $(date -r "${sTIME:-0}" '+%H:%M:%S' 2>/dev/null) · cached | size=11 color=#888888" ;;
+  live)    echo "Updated $(date '+%H:%M:%S') · $VERSION | size=11 color=#888888" ;;
+  limited) echo "Rate-limited · last good $(date -r "${sTIME:-0}" '+%H:%M' 2>/dev/null) | size=11 color=#888888" ;;
+  *)       echo "Updated $(date -r "${sTIME:-0}" '+%H:%M:%S' 2>/dev/null) · cached | size=11 color=#888888" ;;
 esac
-echo "今すぐ再読み込み | refresh=true"
+echo "Refresh now | refresh=true"
 echo "Anthropic Console | href=https://console.anthropic.com/"
