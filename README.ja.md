@@ -77,6 +77,18 @@
 
 ## 🚀 インストール
 
+### かんたんインストール（1行）
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/taka-avantgarde/claude-usage-barometer/main/install.sh | bash
+```
+
+jq と SwiftBar を Homebrew で導入し、プラグインを配置して SwiftBar を起動します。初回の Keychain 確認は **「常に許可」** を押してください。
+
+> [Homebrew](https://brew.sh) と、この Mac で **Claude Code** にサインイン済みであることが必要です。
+
+### 手動インストール
+
 ```bash
 # 1. 依存ツール（curl は macOS に標準搭載）
 brew install jq

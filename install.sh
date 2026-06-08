@@ -1,28 +1,44 @@
 #!/bin/bash
-# Claude Usage Barometer installer
-set -euo pipefail
-
+#
+# Claude Usage Barometer — one-line installer
+#   curl -fsSL https://raw.githubusercontent.com/taka-avantgarde/claude-usage-barometer/main/install.sh | bash
+#
+# License: MIT
+#
+set -e
 REPO="taka-avantgarde/claude-usage-barometer"
-RAW="https://raw.githubusercontent.com/$REPO/main/claude-usage.60s.sh"
+PLUGIN="claude-usage.60s.sh"
+DIR="$HOME/SwiftBar"
 
-echo "▶ Checking dependencies..."
-command -v jq >/dev/null 2>&1 || brew install jq
-[ -d "/Applications/SwiftBar.app" ] || brew install --cask swiftbar
+echo "▶  Claude Usage Barometer — installer"
 
-# Use SwiftBar's configured plugin folder, or default to ~/SwiftBar
-PLUGIN_DIR=$(defaults read com.ameba.SwiftBar PluginDirectory 2>/dev/null || echo "$HOME/SwiftBar")
-[ -z "$PLUGIN_DIR" ] && PLUGIN_DIR="$HOME/SwiftBar"
-defaults write com.ameba.SwiftBar PluginDirectory "$PLUGIN_DIR" >/dev/null 2>&1 || true
-mkdir -p "$PLUGIN_DIR"
+if ! command -v brew >/dev/null 2>&1; then
+  echo "✋ Homebrew not found. Install it from https://brew.sh and re-run this."
+  exit 1
+fi
 
-echo "▶ Downloading plugin..."
-curl -fsSL "$RAW" -o "$PLUGIN_DIR/claude-usage.60s.sh"
-chmod +x "$PLUGIN_DIR/claude-usage.60s.sh"
+command -v jq >/dev/null 2>&1 || { echo "→ installing jq…"; brew install jq; }
 
-echo "▶ Restarting SwiftBar..."
-osascript -e 'quit app "SwiftBar"' 2>/dev/null || true
-sleep 1
-open -a SwiftBar
+if [ ! -d "/Applications/SwiftBar.app" ] && [ ! -d "$HOME/Applications/SwiftBar.app" ]; then
+  echo "→ installing SwiftBar…"; brew install --cask swiftbar
+fi
 
-echo "✅ Installed to $PLUGIN_DIR/claude-usage.60s.sh"
-echo "   (First run may ask for Keychain access — choose 'Always Allow'.)"
+echo "→ installing plugin into $DIR …"
+mkdir -p "$DIR"
+curl -fsSL "https://raw.githubusercontent.com/$REPO/main/$PLUGIN" -o "$DIR/$PLUGIN"
+chmod +x "$DIR/$PLUGIN"
+
+# Best effort: point SwiftBar at the folder and launch it
+defaults write com.ameba.SwiftBar PluginDirectory "$DIR" >/dev/null 2>&1 || true
+open -a SwiftBar >/dev/null 2>&1 || open "/Applications/SwiftBar.app" >/dev/null 2>&1 || true
+
+cat <<DONE
+
+✅ Done! Check your menu bar.
+
+  • If macOS asks to access "Claude Code-credentials"  → click Always Allow
+  • If SwiftBar asks for a plugin folder              → choose:  $DIR
+  • Nothing showing?  Click the SwiftBar icon → Refresh All
+
+Prerequisite: you must be signed in to Claude Code on this Mac.
+DONE

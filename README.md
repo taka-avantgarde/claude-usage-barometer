@@ -77,6 +77,18 @@ The bar's color reflects how close the **more-constrained** window is to its lim
 
 ## 🚀 Installation
 
+### Quick install (one line)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/taka-avantgarde/claude-usage-barometer/main/install.sh | bash
+```
+
+Installs `jq` + SwiftBar via Homebrew, drops in the plugin, and launches SwiftBar. On first run, click **Always Allow** for the Keychain prompt.
+
+> Requires [Homebrew](https://brew.sh) and that you're signed in to **Claude Code** on this Mac.
+
+### Manual install
+
 ```bash
 # 1. Dependencies (curl is preinstalled on macOS)
 brew install jq
