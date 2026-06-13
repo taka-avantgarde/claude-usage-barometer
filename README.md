@@ -27,6 +27,18 @@ Watch your **5-hour** and **7-day** windows drain in real time — right from th
 
 ---
 
+## ⚡ Quick start
+
+**Paste this one line into Terminal — that's the whole setup:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/taka-avantgarde/claude-usage-barometer/main/install.sh | bash
+```
+
+It installs `jq` + SwiftBar (via Homebrew), drops in the plugin, and launches it. On first run, click **Always Allow** for the Keychain prompt. _Requires [Homebrew](https://brew.sh) and that you're signed in to Claude Code on this Mac._
+
+---
+
 ## 👀 Preview
 
 ```text

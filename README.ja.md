@@ -27,6 +27,18 @@
 
 ---
 
+## ⚡ クイックスタート
+
+**Terminal にこの1行を貼るだけ。これで全部完了します:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/taka-avantgarde/claude-usage-barometer/main/install.sh | bash
+```
+
+jq と SwiftBar（Homebrew経由）を導入し、プラグインを配置して起動します。初回の Keychain 確認は **「常に許可」**。_[Homebrew](https://brew.sh) と、この Mac で Claude Code にサインイン済みであることが前提です。_
+
+---
+
 ## 👀 プレビュー
 
 ```text
