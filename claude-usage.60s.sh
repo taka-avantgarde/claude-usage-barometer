@@ -2,12 +2,11 @@
 #
 # Claude Usage Barometer — SwiftBar / xbar plugin
 # A compact, battery-style menu-bar gauge for Claude's 5-hour and 7-day
-# usage limits. The bar shows what's LEFT (█) vs used up (░) and is tinted
-# green -> amber -> red as you approach the limit. Rate-limit friendly,
-# and checks once a day for a newer release.
+# usage limits (█ = remaining, ░ = used; green -> amber -> red). Rate-limit
+# friendly, daily update check, and a dropdown-selectable refresh interval.
 #
 # <xbar.title>Claude Usage Barometer</xbar.title>
-# <xbar.version>v1.3.0</xbar.version>
+# <xbar.version>v1.4.0</xbar.version>
 # <xbar.author>Takayuki Miyano</xbar.author>
 # <xbar.author.github>taka-avantgarde</xbar.author.github>
 # <xbar.desc>Compact battery-style menu-bar gauge for Claude's 5-hour & 7-day usage limits.</xbar.desc>
@@ -22,25 +21,28 @@
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
 
 # ─── Configuration ─────────────────────────────────────────────
-VERSION="v1.3.0"
+VERSION="v1.4.0"
 REPO="taka-avantgarde/claude-usage-barometer"
 WARN=70                 # % used -> amber
 DANGER=90               # % used -> red
 OK_COLOR="#5E9C6B"; WARN_COLOR="#BF9B30"; DANGER_COLOR="#B5524A"
 FILL="█"; EMPTY="░"     # FILL = remaining, EMPTY = used up
-MBAR_W=5                # bar width in the menu bar
-DROP_W=10               # bar width in the dropdown
-SCALE="no"              # endpoint returns 0-100 percentages -> use as-is (set auto/yes for 0-1 fractions)
-MIN_INTERVAL=180        # min seconds between real API calls (rate-limit guard)
+MBAR_W=5; DROP_W=10     # bar widths (menu bar / dropdown)
+SCALE="no"              # endpoint returns 0-100 percentages -> use as-is
 UPDATE_CHECK=1          # 1 = check GitHub once a day for a newer release
-UPDATE_INTERVAL=86400   # seconds between update checks
+UPDATE_INTERVAL=86400
+CACHE="$HOME/.cache/claude-usage-barometer.tsv"
+UPD_CACHE="$HOME/.cache/claude-usage-barometer.update"
+IF="$HOME/.cache/claude-usage-barometer.interval"   # refresh interval (min): 1/3/5, chosen from dropdown
 # ───────────────────────────────────────────────────────────────
 
 ENDPOINT="https://api.anthropic.com/api/oauth/usage"
 BETA="oauth-2025-04-20"
-CACHE="$HOME/.cache/claude-usage-barometer.tsv"
-UPD_CACHE="$HOME/.cache/claude-usage-barometer.update"
 FONT="font=Menlo size=12"
+
+INTERVAL_MIN=3; [ -f "$IF" ] && { read -r INTERVAL_MIN < "$IF" 2>/dev/null || INTERVAL_MIN=3; }
+case "$INTERVAL_MIN" in 1|3|5) ;; *) INTERVAL_MIN=3 ;; esac
+MIN_INTERVAL=$((INTERVAL_MIN*60))
 
 col() { local p=$1; if (( p>=DANGER )); then echo "$DANGER_COLOR"
   elif (( p>=WARN )); then echo "$WARN_COLOR"; else echo "$OK_COLOR"; fi; }
@@ -53,7 +55,6 @@ emit_err() { local mb="$1"; shift
   local l; for l in "$@"; do echo "$l"; done
   echo "Refresh now | refresh=true"; exit 0; }
 
-# ── Cache:  attemptTime \t successTime \t U5 \t U7 \t R5 \t R7 ──
 aTIME=0; sTIME=0; cU5=""; cU7=""; cR5=""; cR7=""
 [ -f "$CACHE" ] && IFS=$'\t' read -r aTIME sTIME cU5 cU7 cR5 cR7 < "$CACHE"
 now=$(date +%s)
@@ -89,7 +90,6 @@ if [ $(( now - aTIME )) -ge "$MIN_INTERVAL" ]; then
   fi
 fi
 
-# ── Update check (throttled, best-effort, never blocks) ──
 LATEST=""
 if [ "$UPDATE_CHECK" = "1" ]; then
   uTIME=0
@@ -133,6 +133,11 @@ echo "5-hour   $(bar $REM5 $DROP_W)  $(fmt $REM5) left | ${FONT} color=$(col $P5
 [ -n "$R5" ] && echo "         resets in $(remain "$R5") | size=11 color=#888888"
 echo "7-day    $(bar $REM7 $DROP_W)  $(fmt $REM7) left | ${FONT} color=$(col $P7)"
 [ -n "$R7" ] && echo "         resets in $(remain "$R7") | size=11 color=#888888"
+echo "---"
+echo "⏱ Update every ${INTERVAL_MIN} min | size=12"
+echo "--1 min$([ "$INTERVAL_MIN" = 1 ] && echo "  ✓") | shell=/bin/bash param1=-c param2=\"echo 1 > $IF\" terminal=false refresh=true"
+echo "--3 min$([ "$INTERVAL_MIN" = 3 ] && echo "  ✓") | shell=/bin/bash param1=-c param2=\"echo 3 > $IF\" terminal=false refresh=true"
+echo "--5 min$([ "$INTERVAL_MIN" = 5 ] && echo "  ✓") | shell=/bin/bash param1=-c param2=\"echo 5 > $IF\" terminal=false refresh=true"
 echo "---"
 [ -n "$LATEST" ] && ver_gt "$VERSION" "$LATEST" && echo "⬆️ Update available: $LATEST | href=https://github.com/$REPO/releases color=#BF9B30"
 case "$SRC" in

@@ -55,6 +55,7 @@ Watch your **5-hour** and **7-day** windows drain in real time — right from th
 - **Compact** — just the two bars in the menu bar; the dropdown shows `% left` and the reset countdown.
 - **Rate-limit friendly** — caches the last good reading and throttles API calls (≥ 3 min apart), surviving brief `429`s.
 - **Update-aware** — checks GitHub once a day and shows an "update available" link in the dropdown when a newer release exists.
+- **Adjustable refresh** — pick **1 / 3 / 5 min** from the dropdown (the current interval is shown as `⏱ Update every N min`).
 - **Zero build, pure Bash.** Easy to read, audit, and tweak. Private by design.
 
 ## 🎨 How the color works
@@ -115,7 +116,7 @@ Edit the block at the top of `claude-usage.60s.sh`:
 | `OK_COLOR` / `WARN_COLOR` / `DANGER_COLOR` | sage / ochre / brick | the three colors |
 | `FILL` / `EMPTY` | `█` / `░` | remaining / used-up bar characters |
 | `MBAR_W` / `DROP_W` | `5` / `10` | bar width (menu bar / dropdown) |
-| `MIN_INTERVAL` | `180` | min seconds between real API calls (rate-limit guard) |
+| refresh interval | menu | pick **1 / 3 / 5 min** from the dropdown `⏱` (stored in `~/.cache/claude-usage-barometer.interval`) |
 | `SCALE` | `no` | how to read `utilization` — the endpoint returns 0–100 percentages (`no` = as-is) |
 | `UPDATE_CHECK` | `1` | check GitHub once a day for a newer release (`0` to disable) |
 
