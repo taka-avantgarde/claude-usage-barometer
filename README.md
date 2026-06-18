@@ -1,11 +1,22 @@
 <div align="center">
 
+#### 🌐 &nbsp; Language · 言語 · Idioma · اللغة · Langue · Sprache
+
+[![English](https://img.shields.io/badge/English-2563EB?style=for-the-badge)](README.md)
+[![日本語](https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-555555?style=for-the-badge)](README.ja.md)
+[![Español](https://img.shields.io/badge/Espa%C3%B1ol-555555?style=for-the-badge)](README.es.md)
+[![العربية](https://img.shields.io/badge/%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-555555?style=for-the-badge)](README.ar.md)
+[![Français](https://img.shields.io/badge/Fran%C3%A7ais-555555?style=for-the-badge)](README.fr.md)
+[![Deutsch](https://img.shields.io/badge/Deutsch-555555?style=for-the-badge)](README.de.md)
+
+</div>
+
+<div align="center">
+
 # 🎚️ Claude Usage Barometer
 
 **A compact, battery-style menu-bar gauge for your Claude usage limits.**
 Watch your **5-hour** and **7-day** windows drain in real time — right from the macOS menu bar.
-
-[**English**](README.md) · [日本語](README.ja.md)
 
 <br>
 
