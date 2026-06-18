@@ -1,13 +1,10 @@
+<img src="https://img.shields.io/badge/macOS_uniquement-007AFF?style=for-the-badge&logo=apple&logoColor=white" height="40" alt="macOS uniquement">
+
 <div align="center">
 
-#### 🌐 &nbsp; Language · 言語 · Idioma · اللغة · Langue · Sprache
+#### 🌐 &nbsp; Language
 
-[![English](https://img.shields.io/badge/English-555555?style=for-the-badge)](README.md)
-[![日本語](https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-555555?style=for-the-badge)](README.ja.md)
-[![Español](https://img.shields.io/badge/Espa%C3%B1ol-555555?style=for-the-badge)](README.es.md)
-[![العربية](https://img.shields.io/badge/%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-555555?style=for-the-badge)](README.ar.md)
-[![Français](https://img.shields.io/badge/Fran%C3%A7ais-2563EB?style=for-the-badge)](README.fr.md)
-[![Deutsch](https://img.shields.io/badge/Deutsch-555555?style=for-the-badge)](README.de.md)
+🇬🇧 [English](README.md) • 🇯🇵 [日本語](README.ja.md) • 🇪🇸 [Español](README.es.md) • 🇸🇦 [العربية](README.ar.md) • 🇫🇷 **Français** • 🇩🇪 [Deutsch](README.de.md) • 🇨🇳 [简体中文](README.zh.md) • 🇰🇷 [한국어](README.ko.md) • 🇧🇷 [Português](README.pt.md) • 🇳🇱 [Nederlands](README.nl.md) • 🇮🇹 [Italiano](README.it.md) • 🇻🇳 [Tiếng Việt](README.vi.md) • 🇮🇩 [Bahasa Indonesia](README.id.md) • 🇹🇭 [ไทย](README.th.md)
 
 </div>
 
